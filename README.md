@@ -1,7 +1,5 @@
 # GrzybcioRynek
 
-![Logo](GrzybcioRynek-logo-96x96.png)
-
 Plugin Spigot/Paper dla Minecraft 1.21 — rynek graczy z GUI, ekonomią Vault oraz wsparciem Nexo i Oraxen.
 
 ---
