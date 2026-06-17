@@ -1,5 +1,7 @@
 # GrzybcioRynek
 
+![Logo](GrzybcioRynek-logo-96x96.png)
+
 Plugin Spigot/Paper dla Minecraft 1.21 — rynek graczy z GUI, ekonomią Vault oraz wsparciem Nexo i Oraxen.
 
 ---
@@ -109,3 +111,31 @@ Listings are stored in `listings.yml`. The plugin enforces limits (default: 10 l
 ---
 
 **Autor:** Grzybcio · **Wersja:** 1.0.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------
+
+### Wersja 1.0.1
+
+**PL**
+- Dodano plik `gui.yml` z konfiguracją układu GUI rynku
+- Konfigurowalne sloty: ramka, wystawione przedmioty (`listing-slots`), kategorie, paginacja, okno potwierdzenia zakupu
+- Opcja `filler.enabled` — włączanie/wyłączanie szklanej ramki w GUI przeglądania i potwierdzenia
+- `/market reload` przeładowuje również `gui.yml`
+
+**EN**
+- Added `gui.yml` for market GUI layout configuration
+- Configurable slots: border, listed items (`listing-slots`), categories, pagination, purchase confirmation GUI
+- `filler.enabled` option — toggle glass border filler in browse and confirm GUIs
+- `/market reload` also reloads `gui.yml`

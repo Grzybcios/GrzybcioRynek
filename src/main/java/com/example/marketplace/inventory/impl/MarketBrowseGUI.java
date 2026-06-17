@@ -4,6 +4,7 @@ import com.example.marketplace.MarketPlace;
 import com.example.marketplace.inventory.InventoryButton;
 import com.example.marketplace.inventory.InventoryGUI;
 import com.example.marketplace.inventory.MarketCategory;
+import com.example.marketplace.managers.GuiConfigManager;
 import com.example.marketplace.model.MarketListing;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,33 +22,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MarketBrowseGUI extends InventoryGUI {
-    private static final int INVENTORY_SIZE = 54;
-    private static final int ITEMS_PER_PAGE = 20;
-
-    private static final int[] BORDER_SLOTS = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8,
-        9, 11, 17,
-        18, 20, 26,
-        27, 29, 35,
-        36, 38, 44,
-        45, 46, 47, 48, 52, 53
-    };
-
-    private static final int[] CONTENT_SLOTS = {
-        12, 13, 14, 15, 16,
-        21, 22, 23, 24, 25,
-        30, 31, 32, 33, 34,
-        39, 40, 41, 42, 43
-    };
-
-    private static final int SLOT_TOOLS = 10;
-    private static final int SLOT_BLOCKS = 19;
-    private static final int SLOT_COMBAT = 28;
-    private static final int SLOT_OTHER = 37;
-    private static final int SLOT_PREVIOUS = 49;
-    private static final int SLOT_PAGE = 50;
-    private static final int SLOT_NEXT = 51;
-
     private final MarketPlace plugin;
     private final int page;
     private final MarketCategory category;
@@ -62,10 +36,14 @@ public class MarketBrowseGUI extends InventoryGUI {
         this.category = category;
     }
 
+    private GuiConfigManager guiConfig() {
+        return plugin.getGuiConfigManager();
+    }
+
     @Override
     protected Inventory createInventory() {
         String title = plugin.getMessageManager().getMessage("gui.title");
-        return Bukkit.createInventory(null, INVENTORY_SIZE, title);
+        return Bukkit.createInventory(null, guiConfig().getBrowseSize(), title);
     }
 
     @Override
@@ -86,7 +64,11 @@ public class MarketBrowseGUI extends InventoryGUI {
     }
 
     private void fillBorder() {
-        for (int slot : BORDER_SLOTS) {
+        if (!guiConfig().isBrowseFillerEnabled()) {
+            return;
+        }
+
+        for (int slot : guiConfig().getBrowseBorderSlots()) {
             addButton(slot, new InventoryButton()
                 .creator(p -> createGlassPane())
                 .consumer(event -> {})
@@ -95,10 +77,15 @@ public class MarketBrowseGUI extends InventoryGUI {
     }
 
     private void fillCategories() {
-        addCategoryButton(SLOT_TOOLS, MarketCategory.TOOLS, Material.DIAMOND_PICKAXE, "gui.category.tools");
-        addCategoryButton(SLOT_BLOCKS, MarketCategory.BLOCKS, Material.GRASS_BLOCK, "gui.category.blocks");
-        addCategoryButton(SLOT_COMBAT, MarketCategory.COMBAT, Material.DIAMOND_SWORD, "gui.category.combat");
-        addCategoryButton(SLOT_OTHER, MarketCategory.OTHER, Material.GUNPOWDER, "gui.category.other");
+        for (MarketCategory targetCategory : MarketCategory.values()) {
+            GuiConfigManager.CategoryButtonConfig buttonConfig = guiConfig().getCategoryButton(targetCategory);
+            addCategoryButton(
+                buttonConfig.getSlot(),
+                targetCategory,
+                buttonConfig.getMaterial(),
+                "gui.category." + targetCategory.name().toLowerCase()
+            );
+        }
     }
 
     private void addCategoryButton(int slot, MarketCategory targetCategory, Material material, String namePath) {
@@ -113,14 +100,16 @@ public class MarketBrowseGUI extends InventoryGUI {
     }
 
     private void fillListings(Player player, List<MarketListing> listings) {
-        int startIndex = (page - 1) * ITEMS_PER_PAGE;
-        int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, listings.size());
+        int itemsPerPage = guiConfig().getItemsPerPage();
+        int[] listingSlots = guiConfig().getListingSlots();
+        int startIndex = (page - 1) * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, listings.size());
 
         for (int i = startIndex; i < endIndex; i++) {
             MarketListing listing = listings.get(i);
             final int listingId = listing.getId();
             final boolean ownListing = listing.getSeller().equals(player.getUniqueId());
-            int slot = CONTENT_SLOTS[i - startIndex];
+            int slot = listingSlots[i - startIndex];
 
             addButton(slot, new InventoryButton()
                 .creator(p -> createListingItem(listing, player))
@@ -142,9 +131,10 @@ public class MarketBrowseGUI extends InventoryGUI {
     }
 
     private void fillPagination(int totalListings) {
-        int totalPages = Math.max(1, (int) Math.ceil((double) totalListings / ITEMS_PER_PAGE));
+        int itemsPerPage = guiConfig().getItemsPerPage();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalListings / itemsPerPage));
 
-        addButton(SLOT_PREVIOUS, new InventoryButton()
+        addButton(guiConfig().getPaginationPrevious(), new InventoryButton()
             .creator(p -> createArrowItem(page > 1))
             .consumer(event -> {
                 if (page <= 1) {
@@ -156,12 +146,12 @@ public class MarketBrowseGUI extends InventoryGUI {
             })
         );
 
-        addButton(SLOT_PAGE, new InventoryButton()
+        addButton(guiConfig().getPaginationPage(), new InventoryButton()
             .creator(p -> createPageIndicator(page, totalPages))
             .consumer(event -> {})
         );
 
-        addButton(SLOT_NEXT, new InventoryButton()
+        addButton(guiConfig().getPaginationNext(), new InventoryButton()
             .creator(p -> createArrowItem(page < totalPages))
             .consumer(event -> {
                 if (page >= totalPages) {
@@ -175,10 +165,10 @@ public class MarketBrowseGUI extends InventoryGUI {
     }
 
     private ItemStack createGlassPane() {
-        ItemStack item = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemStack item = new ItemStack(guiConfig().getBrowseFillerMaterial());
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(" ");
+            meta.setDisplayName(guiConfig().getBrowseFillerName());
             item.setItemMeta(meta);
         }
         return item;

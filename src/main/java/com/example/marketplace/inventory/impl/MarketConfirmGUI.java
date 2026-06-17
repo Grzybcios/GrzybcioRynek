@@ -4,6 +4,7 @@ import com.example.marketplace.MarketPlace;
 import com.example.marketplace.inventory.InventoryButton;
 import com.example.marketplace.inventory.InventoryGUI;
 import com.example.marketplace.inventory.MarketCategory;
+import com.example.marketplace.managers.GuiConfigManager;
 import com.example.marketplace.model.MarketListing;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -17,11 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 public class MarketConfirmGUI extends InventoryGUI {
-    private static final int INVENTORY_SIZE = 27;
-    private static final int SLOT_CONFIRM = 11;
-    private static final int SLOT_ITEM = 13;
-    private static final int SLOT_CANCEL = 15;
-
     private final MarketPlace plugin;
     private final int listingId;
     private final int page;
@@ -34,10 +30,14 @@ public class MarketConfirmGUI extends InventoryGUI {
         this.category = category;
     }
 
+    private GuiConfigManager guiConfig() {
+        return plugin.getGuiConfigManager();
+    }
+
     @Override
     protected Inventory createInventory() {
         String title = plugin.getMessageManager().getMessage("gui.confirm.title");
-        return Bukkit.createInventory(null, INVENTORY_SIZE, title);
+        return Bukkit.createInventory(null, guiConfig().getConfirmSize(), title);
     }
 
     @Override
@@ -46,14 +46,14 @@ public class MarketConfirmGUI extends InventoryGUI {
 
         MarketListing listing = plugin.getStorageManager().getListing(listingId);
 
-        addButton(SLOT_ITEM, new InventoryButton()
+        addButton(guiConfig().getConfirmItemSlot(), new InventoryButton()
             .creator(p -> listing != null ? createPreviewItem(listing) : createGlassPane())
             .consumer(event -> {})
         );
 
         if (listing != null) {
-            addButton(SLOT_CONFIRM, new InventoryButton()
-                .creator(p -> createActionItem(Material.LIME_CONCRETE, "gui.confirm.confirm"))
+            addButton(guiConfig().getConfirmSlot(), new InventoryButton()
+                .creator(p -> createActionItem(guiConfig().getConfirmButtonMaterial(), "gui.confirm.confirm"))
                 .consumer(event -> {
                     Player clicker = (Player) event.getWhoClicked();
                     clicker.closeInventory();
@@ -62,14 +62,14 @@ public class MarketConfirmGUI extends InventoryGUI {
                 })
             );
         } else {
-            addButton(SLOT_CONFIRM, new InventoryButton()
+            addButton(guiConfig().getConfirmSlot(), new InventoryButton()
                 .creator(p -> createGlassPane())
                 .consumer(event -> {})
             );
         }
 
-        addButton(SLOT_CANCEL, new InventoryButton()
-            .creator(p -> createActionItem(Material.RED_CONCRETE, "gui.confirm.cancel"))
+        addButton(guiConfig().getConfirmCancelSlot(), new InventoryButton()
+            .creator(p -> createActionItem(guiConfig().getCancelButtonMaterial(), "gui.confirm.cancel"))
             .consumer(event -> {
                 Player clicker = (Player) event.getWhoClicked();
                 clicker.closeInventory();
@@ -81,8 +81,16 @@ public class MarketConfirmGUI extends InventoryGUI {
     }
 
     private void fillBorder() {
-        for (int slot = 0; slot < INVENTORY_SIZE; slot++) {
-            if (slot == SLOT_CONFIRM || slot == SLOT_ITEM || slot == SLOT_CANCEL) {
+        if (!guiConfig().isConfirmFillerEnabled()) {
+            return;
+        }
+
+        int confirmSlot = guiConfig().getConfirmSlot();
+        int itemSlot = guiConfig().getConfirmItemSlot();
+        int cancelSlot = guiConfig().getConfirmCancelSlot();
+
+        for (int slot = 0; slot < guiConfig().getConfirmSize(); slot++) {
+            if (slot == confirmSlot || slot == itemSlot || slot == cancelSlot) {
                 continue;
             }
 
@@ -129,10 +137,10 @@ public class MarketConfirmGUI extends InventoryGUI {
     }
 
     private ItemStack createGlassPane() {
-        ItemStack item = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemStack item = new ItemStack(guiConfig().getConfirmFillerMaterial());
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(" ");
+            meta.setDisplayName(guiConfig().getConfirmFillerName());
             item.setItemMeta(meta);
         }
         return item;

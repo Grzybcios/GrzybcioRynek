@@ -127,6 +127,7 @@ public class MarketCommand implements CommandExecutor, TabCompleter {
         }
 
         plugin.getConfigManager().reload();
+        plugin.getGuiConfigManager().reload();
         plugin.getStorageManager().load();
         plugin.getMessageManager().sendMessage(sender, "reload.success");
         return true;

@@ -11,6 +11,7 @@ import com.example.marketplace.inventory.gui.GUIListener;
 import com.example.marketplace.inventory.gui.GUIManager;
 import com.example.marketplace.listeners.PlayerJoinListener;
 import com.example.marketplace.managers.ConfigManager;
+import com.example.marketplace.managers.GuiConfigManager;
 import com.example.marketplace.managers.MarketManager;
 import com.example.marketplace.managers.MessageManager;
 import com.example.marketplace.model.MarketListing;
@@ -23,6 +24,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 @Getter
 public class MarketPlace extends JavaPlugin {
     private ConfigManager configManager;
+    private GuiConfigManager guiConfigManager;
     private MessageManager messageManager;
     private StorageManager storageManager;
     private MarketManager marketManager;
@@ -37,6 +39,7 @@ public class MarketPlace extends JavaPlugin {
         ConfigurationSerialization.registerClass(MarketListing.class);
 
         this.configManager = new ConfigManager(this);
+        this.guiConfigManager = new GuiConfigManager(this);
         this.messageManager = new MessageManager(this);
 
         this.vaultHook = new VaultHook(this);
